@@ -1,0 +1,114 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>AI 適性學習系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-indigo-100 to-blue-100 min-h-screen flex items-center justify-center">
+
+<div class="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 space-y-6">
+
+    <!-- 學習狀態列 -->
+    <div class="flex justify-between text-sm text-gray-600">
+        <div>📘 題目數：<span id="total">0</span></div>
+        <div>✅ 答對：<span id="correct">0</span></div>
+        <div>🎯 正確率：<span id="rate">0%</span></div>
+    </div>
+
+    <!-- 題目卡片 -->
+    <div class="bg-indigo-50 p-5 rounded-xl text-center">
+        <div class="text-gray-500 text-sm mb-2">目前題目</div>
+        <div id="question-text" class="text-2xl font-bold text-indigo-700">
+            請點擊下方開始
+        </div>
+    </div>
+
+    <!-- 作答區 -->
+    <input id="ans" type="text"
+        class="border-2 border-indigo-300 focus:border-indigo-500 outline-none w-full p-3 rounded-xl text-center text-lg"
+        placeholder="輸入你的答案">
+
+    <button onclick="send()"
+        class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition">
+        🚀 送出作答
+    </button>
+
+    <!-- AI 回饋區 -->
+    <div id="feedback"
+        class="hidden bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
+        <div id="error-type" class="font-bold text-red-600"></div>
+        <div id="ai-msg" class="text-sm text-red-700"></div>
+    </div>
+
+    <!-- AI 老師提示 -->
+    <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 text-center">
+        🤖 AI 老師：慢慢來，重點是理解，不是速度。
+    </div>
+
+    <!-- 控制區 -->
+    <button onclick="getNewQuestion()"
+        class="w-full border border-gray-300 py-2 rounded-xl hover:bg-gray-100">
+        🔄 換一題
+    </button>
+
+</div>
+
+<script>
+let currentQuestionId = 1;
+let total = 0;
+let correct = 0;
+
+function updateStatus() {
+    document.getElementById("total").innerText = total;
+    document.getElementById("correct").innerText = correct;
+    document.getElementById("rate").innerText =
+        total === 0 ? "0%" : Math.round((correct / total) * 100) + "%";
+}
+
+async function getNewQuestion() {
+    const res = await fetch("http://localhost:8000/generate-question");
+    const data = await res.json();
+
+    currentQuestionId = data.question_id;
+    document.getElementById("question-text").innerText = data.content;
+    document.getElementById("ans").value = "";
+    document.getElementById("feedback").classList.add("hidden");
+}
+
+async function send() {
+    const answer = document.getElementById("ans").value;
+    if (answer === "") return alert("請輸入答案");
+
+    const res = await fetch("http://localhost:8000/submit", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            user_id: 1,
+            question_id: currentQuestionId,
+            answer: answer
+        })
+    });
+
+    const data = await res.json();
+    total++;
+
+    if (data.correct) {
+        correct++;
+        document.getElementById("feedback").classList.add("hidden");
+    } else {
+        document.getElementById("feedback").classList.remove("hidden");
+        document.getElementById("error-type").innerText =
+            "AI 診斷：" + data.ai_feedback.type;
+        document.getElementById("ai-msg").innerText =
+            data.ai_feedback.msg;
+    }
+
+    updateStatus();
+
+    setTimeout(getNewQuestion, 1500);
+}
+</script>
+
+</body>
+</html>   
