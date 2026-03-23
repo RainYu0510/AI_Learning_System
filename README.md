@@ -8,9 +8,12 @@
 
 ```
 AI_Learning_System/
-├── main.py          # FastAPI 後端（出題、作答、AI 分析）
-├── schema.sql       # MySQL 資料庫結構定義
-└── index.html       # 前端介面（Tailwind CSS）
+├── backend/
+│   └── main.py          # FastAPI 後端（出題、作答、AI 分析）
+├── database/
+│   └── setup.sql        # MySQL 資料庫結構定義
+└── frontend/
+    └── index.html       # 前端介面（Tailwind CSS）
 ```
 
 **技術棧**
@@ -65,14 +68,15 @@ pip install fastapi uvicorn pymysql
 ### 2. 建立資料庫
 
 ```bash
-mysql -u root -p < schema.sql
+mysql -u root -p < database/setup.sql
 ```
 
-> 請先確認 MySQL 已啟動，並在 `main.py` 中填入正確的資料庫密碼。
+> 請先確認 MySQL 已啟動，並在 `backend/main.py` 中填入正確的資料庫密碼。
 
 ### 3. 啟動後端
 
 ```bash
+cd backend
 uvicorn main:app --reload
 ```
 
